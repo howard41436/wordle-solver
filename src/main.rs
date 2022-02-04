@@ -63,7 +63,7 @@ fn match_word(word: &str, candidate: &str) -> WordStatus {
     return status;
 }
 
-fn get_exp_of_word(word: &String, possible_words: &Vec<String>) -> u64 {
+fn get_exp_of_word(word: &str, possible_words: &Vec<String>) -> f64 {
     let mut catagories = HashMap::<WordStatus, u64>::new();
     for candidate in possible_words {
         let status = match_word(word, candidate);
@@ -80,15 +80,15 @@ fn get_exp_of_word(word: &String, possible_words: &Vec<String>) -> u64 {
             ret += v * v;
         }
     }
-    return ret;
+    return ret as f64 / possible_words.len() as f64;
 }
 
 fn get_best_word<'a>(
-    word_choices: &'a Vec<String>,
+    allowed_words: &'a Vec<String>,
     possible_words: &Vec<String>,
 ) -> (&'a String, f64) {
     let mut best = None;
-    for word in word_choices {
+    for word in allowed_words {
         let exp = get_exp_of_word(word, possible_words);
         if let Some((_, best_exp)) = best {
             if exp < best_exp {
@@ -98,8 +98,7 @@ fn get_best_word<'a>(
             best = Some((word, exp));
         }
     }
-    let (best_word, num) = best.unwrap();
-    return (best_word, num as f64 / possible_words.len() as f64);
+    return best.unwrap();
 }
 
 fn eliminate(possible_words: &mut Vec<String>, word: &str, status: WordStatus) {
@@ -107,24 +106,40 @@ fn eliminate(possible_words: &mut Vec<String>, word: &str, status: WordStatus) {
 }
 
 fn main() {
-    let mut words = Vec::new();
-    if let Ok(lines) = read_lines("./letters5.txt") {
+    let mut allowed_words = Vec::new();
+    let mut possible_words = Vec::new();
+    if let Ok(lines) = read_lines("./allowed.txt") {
         for line in lines {
             if let Ok(word) = line {
-                words.push(word);
+                allowed_words.push(word);
             }
         }
     }
-    let word_choices = words.clone();
-    let mut possible_words = words;
+    if let Ok(lines) = read_lines("./answers.txt") {
+        for line in lines {
+            if let Ok(word) = line {
+                possible_words.push(word);
+            }
+        }
+    }
+    allowed_words.append(&mut possible_words.clone());
+    // let good_choices = vec!["salet", "crate", "trace", "about", "share"];
+    // for choice in good_choices {
+    //     println!(
+    //         "{}: {:.4}",
+    //         choice,
+    //         get_exp_of_word(choice, &possible_words)
+    //     );
+    // }
+
     let mut round = 0;
     loop {
         if round != 0 {
-            let (best_word, exp) = get_best_word(&word_choices, &possible_words);
+            let (best_word, exp) = get_best_word(&allowed_words, &possible_words);
             println!("Best word: {}, exp: {:.4}", best_word, exp);
         } else {
             // First word is fixed.
-            println!("Best word: tares, exp: 70.5030");
+            println!("Best word: roate, exp: 60.4246");
         }
         let mut word = String::new();
         let mut status = String::new();
